@@ -233,9 +233,10 @@ function kanaMenu(){
   render(`${bar("ひらがな")}<div class="menu">
     <button id="m1"><span class="ic">📋</span><span>ひらがな ひょう<small>タッチすると よんでくれるよ</small></span></button>
     <button id="m2"><span class="ic">👂</span><span>きいて えらぼう<small>きこえた もじは どれ？</small></span></button>
-    <button id="m3"><span class="ic">✏️</span><span>なぞって かこう<small>ゆびで なぞってみよう</small></span></button>
+    <button id="m3"><span class="ic">✏️</span><span>なぞって れんしゅう<small>じゆうに なぞってみよう</small></span></button>
+    <button id="m4"><span class="ic">🔢</span><span>かきじゅん チェック<small>じゅんばん・むきを チェック！</small></span></button>
   </div>`,home,"k");
-  $("#m1").onclick=kanaChart; $("#m2").onclick=()=>rangePick(kanaQuiz); $("#m3").onclick=()=>kanaTrace(0);
+  $("#m1").onclick=kanaChart; $("#m2").onclick=()=>rangePick(kanaQuiz); $("#m3").onclick=()=>kanaTrace(0,"free"); $("#m4").onclick=()=>kanaTrace(0,"order");
 }
 function kanaChart(){
   let t="";LAYOUT.split("/").forEach(r=>[...r.padEnd(5,"_")].forEach(ch=>{t+=ch==="_"?`<div class="tile blank"></div>`:`<button class="tile fk" data-c="${ch}">${ch}</button>`}));
@@ -260,10 +261,12 @@ function kanaQuiz(r){
         hint:`${a.e} <span class="fk">${a.w.replace(a.c,"<span style='color:var(--kana)'>？</span>")}</span>`,
         choices:pickChoices(a.c,pool.map(x=>x.c),KANA.map(x=>x.c),3,KCONF)}}});
 }
-function kanaTrace(idx){
-  traceScreen({title:"なぞって かこう",back:kanaMenu,cls:"k",subj:"kana",guide:"kana",
+function kanaTrace(idx,mode="order"){
+  const fn=mode==="free"?traceFree:traceScreen;
+  fn({title:mode==="free"?"なぞって れんしゅう":"かきじゅん チェック",back:kanaMenu,cls:"k",subj:"kana",guide:"kana",
     items:KANA.map(k=>({ch:k.c,e:k.e,w:k.w,strokes:KSTROKE[k.c],vb:109,speak:()=>sayK(`${k.c}。${k.w}`)})),idx,
-    color:"#ff6b81",jump:KROWS,again:kanaTrace});
+    font:'"UD Digi Kyokasho NK-R","UD デジタル 教科書体 NK-R","UD Digi Kyokasho N-R","YuKyokasho","Klee","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic","Meiryo",sans-serif',
+    color:"#ff6b81",jump:KROWS,again:i=>kanaTrace(i,mode)});
 }
 
 /* ========== アルファベット ========== */
@@ -274,12 +277,14 @@ function abcMenu(){
     <button id="m3"><span class="ic">👂</span><span>きいて えらぼう<small>おおもじ</small></span></button>
     <button id="m4"><span class="ic">👂</span><span>きいて えらぼう<small>こもじ</small></span></button>
     <button id="m5"><span class="ic">🤝</span><span>なかよし ペア<small>A と a を つなげよう</small></span></button>
-    <button id="m6"><span class="ic">✏️</span><span>なぞろう<small>おおもじ</small></span></button>
-    <button id="m7"><span class="ic">✏️</span><span>なぞろう<small>こもじ</small></span></button>
+    <button id="m6"><span class="ic">✏️</span><span>なぞって れんしゅう<small>おおもじ</small></span></button>
+    <button id="m7"><span class="ic">✏️</span><span>なぞって れんしゅう<small>こもじ</small></span></button>
+    <button id="m8"><span class="ic">🔢</span><span>かきじゅん チェック<small>おおもじ</small></span></button>
+    <button id="m9"><span class="ic">🔢</span><span>かきじゅん チェック<small>こもじ</small></span></button>
   </div>`,home,"a");
   $("#m1").onclick=()=>abcChart("U");$("#m2").onclick=()=>abcChart("L");
   $("#m3").onclick=()=>abcQuiz("U");$("#m4").onclick=()=>abcQuiz("L");
-  $("#m5").onclick=pairQuiz;$("#m6").onclick=()=>abcTrace("U",0);$("#m7").onclick=()=>abcTrace("L",0);
+  $("#m5").onclick=pairQuiz;$("#m6").onclick=()=>abcTrace("U",0,"free");$("#m7").onclick=()=>abcTrace("L",0,"free");$("#m8").onclick=()=>abcTrace("U",0,"order");$("#m9").onclick=()=>abcTrace("L",0,"order");
 }
 function abcChart(m){
   render(`${bar(m==="U"?"おおもじ ひょう":"こもじ ひょう")}<div class="viewer" id="vw"><span class="vw-t">👆 もじを タッチしてね</span></div>
@@ -306,10 +311,11 @@ function pairQuiz(){
         speak:()=>sayA(a.U),answer:a[want],
         choices:pickChoices(a[want],ABC.map(x=>x[want]),ABC.map(x=>x[want]),4,want==="U"?UCONF:LCONF)}}});
 }
-function abcTrace(m,idx){
-  traceScreen({title:m==="U"?"なぞろう（おおもじ）":"なぞろう（こもじ）",back:abcMenu,cls:"a",subj:"abc",guide:"abc",
+function abcTrace(m,idx,mode="order"){
+  const fn=mode==="free"?traceFree:traceScreen,cs=m==="U"?"おおもじ":"こもじ";
+  fn({title:mode==="free"?`なぞって れんしゅう（${cs}）`:`かきじゅん チェック（${cs}）`,back:abcMenu,cls:"a",subj:"abc",guide:"abc",
     items:ABC.map(x=>({ch:x[m],e:x.e,w:x.w,strokes:ABCS[x[m]],vb:100,speak:()=>sayA(`${x.U}. ${x.w}`)})),idx,
-    color:"#3d8bfd",again:i=>abcTrace(m,i)});
+    font:'"Century Gothic","Futura","Avenir Next","Helvetica Neue",Arial,sans-serif',color:"#3d8bfd",again:i=>abcTrace(m,i,mode)});
 }
 
 /* ========== クイズのしくみ ========== */
@@ -346,6 +352,65 @@ function runQuiz(cfg){
     FAN();confetti();$("#ag").onclick=cfg.again;$("#mn").onclick=cfg.back;
   }
   q();
+}
+
+/* ========== なぞって れんしゅう（じゆう） ========== */
+function traceFree(cfg){
+  const {items}=cfg;let idx=(cfg.idx+items.length)%items.length;const it=items[idx];let got=false;
+  const jump=cfg.jump?`<div class="jump">${cfg.jump.map(([c,n],k)=>{const nx=cfg.jump[k+1]?cfg.jump[k+1][1]:items.length;return `<button class="fk ${idx>=n&&idx<nx?"on":""}" data-j="${n}">${c}</button>`}).join("")}</div>`:"";
+  render(`${bar(cfg.title)}${jump}<div class="thead"><span class="pic">${it.e}</span> <span class="${cfg.guide==="kana"?"fk":"fa"}">${it.w}</span>　<small>${idx+1}/${items.length}</small></div>
+    <div class="tw" id="tw"><canvas id="cg"></canvas><canvas id="cd"></canvas></div>
+    <div class="tbar"><button id="pv">◀</button><button id="sd">🔊</button><button id="cl">🧽 けす</button><button class="done" id="dn">できた！</button><button id="nx">▶</button></div>
+    <div class="msg" id="msg"></div>`,cfg.back,cfg.cls);
+  $$("[data-j]").forEach(b=>b.onclick=()=>cfg.again(+b.dataset.j));
+  $("#pv").onclick=()=>cfg.again(idx-1);$("#nx").onclick=()=>cfg.again(idx+1);$("#sd").onclick=it.speak;
+
+  const tw=$("#tw"),cg=$("#cg"),cd=$("#cd");
+  const dpr=Math.min(window.devicePixelRatio||1,2);const W=Math.round(tw.clientWidth*dpr);
+  [cg,cd].forEach(c=>{c.width=c.height=W});
+  const g=cg.getContext("2d");
+  const isK=cfg.guide==="kana";
+  const fs=isK?W*.74:W*.56;const penW=isK?W*.062:W*.05;
+  const font=`${fs}px ${cfg.font}`;g.font=font;
+  let x=W/2,y;
+  if(isK){
+    // 十字の補助線
+    g.strokeStyle="#f3c9cf";g.lineWidth=Math.max(1,W*.004);g.setLineDash([W*.02,W*.02]);
+    g.beginPath();g.moveTo(W/2,0);g.lineTo(W/2,W);g.moveTo(0,W/2);g.lineTo(W,W/2);g.stroke();g.setLineDash([]);
+    const m=g.measureText(it.ch);y=W/2+((m.actualBoundingBoxAscent||fs*.8)-(m.actualBoundingBoxDescent||0))/2;
+  }else{
+    // 英語の4本線
+    y=W*.66;
+    const mH=g.measureText("H"),mx=g.measureText("x"),mp=g.measureText("p");
+    const lines=[y-(mH.actualBoundingBoxAscent||fs*.72),y-(mx.actualBoundingBoxAscent||fs*.52),y,y+(mp.actualBoundingBoxDescent||fs*.22)];
+    lines.forEach((ly,k)=>{g.strokeStyle=k===2?"#ff9aa8":"#bcd6f5";g.lineWidth=Math.max(1,W*(k===2?.006:.004));
+      if(k===1)g.setLineDash([W*.02,W*.015]);else g.setLineDash([]);g.beginPath();g.moveTo(W*.04,ly);g.lineTo(W*.96,ly);g.stroke()});
+    g.setLineDash([]);
+  }
+  g.textAlign="center";g.textBaseline="alphabetic";g.fillStyle="#dedede";g.fillText(it.ch,x,y);
+
+  // 判定用（どれだけなぞれたか）
+  const mkMask=extra=>{const c=document.createElement("canvas");c.width=c.height=W;const m=c.getContext("2d");m.font=font;m.textAlign="center";m.textBaseline="alphabetic";m.fillStyle="#000";m.fillText(it.ch,x,y);if(extra){m.strokeStyle="#000";m.lineWidth=extra;m.lineJoin="round";m.strokeText(it.ch,x,y)}return m.getImageData(0,0,W,W).data};
+  const maskL=mkMask(0),maskT=mkMask(penW*2.2);
+
+  const d=cd.getContext("2d");d.lineCap=d.lineJoin="round";d.lineWidth=penW;d.strokeStyle=cfg.color;d.fillStyle=cfg.color;
+  let drawing=false,last=null;
+  const pos=e=>{const r=cd.getBoundingClientRect();return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*W/r.height]};
+  cd.onpointerdown=e=>{e.preventDefault();drawing=true;try{cd.setPointerCapture(e.pointerId)}catch(_){}last=pos(e);d.beginPath();d.arc(last[0],last[1],penW/2,0,Math.PI*2);d.fill()};
+  cd.onpointermove=e=>{if(!drawing)return;const p=pos(e);d.beginPath();d.moveTo(last[0],last[1]);d.lineTo(p[0],p[1]);d.stroke();last=p};
+  cd.onpointerup=cd.onpointercancel=()=>{drawing=false};
+  $("#cl").onclick=()=>{d.clearRect(0,0,W,W);$("#msg").textContent=""};
+  $("#dn").onclick=()=>{
+    const b=d.getImageData(0,0,W,W).data;let L=0,h=0,ink=0,out=0;
+    for(let i=3;i<b.length;i+=12){const k=b[i]>60;if(maskL[i]>60){L++;if(k)h++}if(k){ink++;if(maskT[i]<60)out++}}
+    const msg=$("#msg");
+    if(ink<20){msg.textContent="なぞってから おしてね ✏️";return}
+    const cov=L?h/L:0,o=out/ink;
+    if(cov>=.55&&o<=.3){msg.textContent="🌟 すごい！じょうず！ 🌟";GOOD();maru();if(!got){got=true;store.add(cfg.subj,1)}}
+    else if(cov>=.35&&o<=.5){msg.textContent="👍 いいね！もうすこし ていねいに";tone([660,880])}
+    else{msg.textContent="うすい もじを なぞってみよう 😊";BAD()}
+  };
+  let rt;window.onresize=()=>{clearTimeout(rt);rt=setTimeout(()=>cfg.again(idx),300)};
 }
 
 /* ========== なぞりがき（かきじゅん チェック つき） ========== */
