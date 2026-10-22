@@ -79,9 +79,18 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 .jump{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
 .jump button{font-size:20px;width:46px;height:46px;border-radius:12px;background:#fff;box-shadow:0 3px 0 #0002}
 .jump button.on{background:var(--kana);color:#fff}
-.thead{text-align:center;font-size:26px;margin-bottom:8px}
+.thead{text-align:center;font-size:24px;margin-bottom:6px}
 .thead .pic{font-size:40px;vertical-align:middle}
-.tw{position:relative;width:min(88vw,56vh,520px);aspect-ratio:1;margin:0 auto;background:#fff;border-radius:24px;box-shadow:0 5px 0 #0002;overflow:hidden}
+.jump.sub button{background:#fff;border:2px solid #ffd59a}
+.jump button.cur{background:#ffc93c;border-color:#ffc93c}
+.jump.abcj button{width:40px;height:40px;font-size:20px}
+.trow{display:flex;align-items:center;justify-content:center;gap:14px}
+.side{flex:none;width:66px;height:66px;border-radius:50%;background:#ffc93c;font-size:28px;box-shadow:0 4px 0 #0002;color:var(--ink)}
+.side:active{transform:translateY(3px);box-shadow:0 1px 0 #0002}
+.side.glow{animation:glow 1s ease-in-out infinite}
+@keyframes glow{50%{transform:scale(1.18);box-shadow:0 0 0 12px #ffc93c66}}
+@media (max-width:560px){.side{width:48px;height:48px;font-size:22px}.trow{gap:8px}.tw{width:min(calc(100vw - 136px),calc(100vh - 380px),520px)}}
+.tw{position:relative;width:min(calc(100vw - 190px),calc(100vh - 380px),520px);min-width:220px;aspect-ratio:1;margin:0;background:#fff;border-radius:24px;box-shadow:0 5px 0 #0002;overflow:hidden}
 .tw canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 .tbar{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
 .tbar button{font-size:22px;border-radius:18px;padding:12px 18px;background:#fff;box-shadow:0 4px 0 #0002;font-weight:bold}
@@ -355,12 +364,23 @@ function runQuiz(cfg){
 }
 
 /* ========== なぞって れんしゅう（じゆう） ========== */
+function jumpHtml(cfg,idx,items){
+  const fc=cfg.guide==="kana"?"fk":"fa";
+  const one=(k,cls)=>`<button class="${fc} ${cls}" data-j="${k}">${items[k].ch}</button>`;
+  if(cfg.jump){
+    let rs=0,re=items.length;
+    const rows=cfg.jump.map(([c,n],k)=>{const nx=cfg.jump[k+1]?cfg.jump[k+1][1]:items.length,on=idx>=n&&idx<nx;if(on){rs=n;re=nx}return `<button class="${fc} ${on?"on":""}" data-j="${n}">${c}</button>`}).join("");
+    let sub="";for(let k=rs;k<re;k++)sub+=one(k,k===idx?"cur":"");
+    return `<div class="jump">${rows}</div><div class="jump sub">${sub}</div>`;
+  }
+  return `<div class="jump sub abcj">${items.map((_,k)=>one(k,k===idx?"cur":"")).join("")}</div>`;
+}
 function traceFree(cfg){
   const {items}=cfg;let idx=(cfg.idx+items.length)%items.length;const it=items[idx];let got=false;
-  const jump=cfg.jump?`<div class="jump">${cfg.jump.map(([c,n],k)=>{const nx=cfg.jump[k+1]?cfg.jump[k+1][1]:items.length;return `<button class="fk ${idx>=n&&idx<nx?"on":""}" data-j="${n}">${c}</button>`}).join("")}</div>`:"";
+  const jump=jumpHtml(cfg,idx,items);
   render(`${bar(cfg.title)}${jump}<div class="thead"><span class="pic">${it.e}</span> <span class="${cfg.guide==="kana"?"fk":"fa"}">${it.w}</span>　<small>${idx+1}/${items.length}</small></div>
-    <div class="tw" id="tw"><canvas id="cg"></canvas><canvas id="cd"></canvas></div>
-    <div class="tbar"><button id="pv">◀</button><button id="sd">🔊</button><button id="cl">🧽 けす</button><button class="done" id="dn">できた！</button><button id="nx">▶</button></div>
+    <div class="trow"><button class="side" id="pv" aria-label="まえ">◀</button><div class="tw" id="tw"><canvas id="cg"></canvas><canvas id="cd"></canvas></div><button class="side" id="nx" aria-label="つぎ">▶</button></div>
+    <div class="tbar"><button id="sd">🔊</button><button id="cl">🧽 けす</button><button class="done" id="dn">できた！</button></div>
     <div class="msg" id="msg"></div>`,cfg.back,cfg.cls);
   $$("[data-j]").forEach(b=>b.onclick=()=>cfg.again(+b.dataset.j));
   $("#pv").onclick=()=>cfg.again(idx-1);$("#nx").onclick=()=>cfg.again(idx+1);$("#sd").onclick=it.speak;
@@ -406,7 +426,7 @@ function traceFree(cfg){
     const msg=$("#msg");
     if(ink<20){msg.textContent="なぞってから おしてね ✏️";return}
     const cov=L?h/L:0,o=out/ink;
-    if(cov>=.55&&o<=.3){msg.textContent="🌟 すごい！じょうず！ 🌟";GOOD();maru();if(!got){got=true;store.add(cfg.subj,1)}}
+    if(cov>=.55&&o<=.3){msg.textContent="🌟 すごい！じょうず！ 🌟";GOOD();maru();$("#nx").classList.add("glow");if(!got){got=true;store.add(cfg.subj,1)}}
     else if(cov>=.35&&o<=.5){msg.textContent="👍 いいね！もうすこし ていねいに";tone([660,880])}
     else{msg.textContent="うすい もじを なぞってみよう 😊";BAD()}
   };
@@ -498,11 +518,11 @@ function matchStroke(U,E,Elen,W){
 }
 function traceScreen(cfg){
   const {items}=cfg;const idx=(cfg.idx+items.length)%items.length;const it=items[idx];
-  const jump=cfg.jump?`<div class="jump">${cfg.jump.map(([c,n],k)=>{const nx=cfg.jump[k+1]?cfg.jump[k+1][1]:items.length;return `<button class="fk ${idx>=n&&idx<nx?"on":""}" data-j="${n}">${c}</button>`}).join("")}</div>`:"";
+  const jump=jumpHtml(cfg,idx,items);
   render(`${bar(cfg.title)}${jump}<div class="thead"><span class="pic">${it.e}</span> <span class="${cfg.guide==="kana"?"fk":"fa"}">${it.w}</span>　<small>${idx+1}/${items.length}</small></div>
-    <div class="tw" id="tw"><canvas id="cg"></canvas><canvas id="cd"></canvas></div>
+    <div class="trow"><button class="side" id="pv" aria-label="まえ">◀</button><div class="tw" id="tw"><canvas id="cg"></canvas><canvas id="cd"></canvas></div><button class="side" id="nx" aria-label="つぎ">▶</button></div>
     <div class="msg" id="msg">みどりの ● から かいてね</div>
-    <div class="tbar"><button id="pv">◀</button><button id="sd">🔊</button><button id="dm">👀 おてほん</button><button id="cl">🔄 さいしょから</button><button id="nx">▶</button></div>`,cfg.back,cfg.cls);
+    <div class="tbar"><button id="sd">🔊</button><button id="dm">👀 おてほん</button><button id="cl">🔄 さいしょから</button></div>`,cfg.back,cfg.cls);
   $$("[data-j]").forEach(b=>b.onclick=()=>cfg.again(+b.dataset.j));
   $("#pv").onclick=()=>cfg.again(idx-1);$("#nx").onclick=()=>cfg.again(idx+1);$("#sd").onclick=it.speak;
 
@@ -547,7 +567,7 @@ function traceScreen(cfg){
     cur+=n;dc.clearRect(0,0,W,W);drawBase();
     if(cur>=S.length){
       GOOD();maru();it.speak();
-      if(miss===0){msg.textContent="🌟 かんぺき！ かきじゅん ばっちり！ 🌟";store.add(cfg.subj,1)}
+      $("#nx").classList.add("glow");if(miss===0){msg.textContent="🌟 かんぺき！ かきじゅん ばっちり！ 🌟";store.add(cfg.subj,1)}
       else msg.textContent="👍 できたね！ つぎは まちがえずに かけるかな？";
     }else{tone([880],"sine");msg.textContent=`${cur+1}かくめ！ みどりの ● から`}
   }
