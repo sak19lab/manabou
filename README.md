@@ -7,3 +7,6 @@
 - ⭐ シールの数だけ、使っている端末の中に保存
 
 ブラウザで開くだけで使えます。
+
+## ライセンス表記
+ひらがなの書き順データは [KanjiVG](https://kanjivg.tagaini.net)（© Ulrich Apel）を使用しています（CC BY-SA 3.0）。
