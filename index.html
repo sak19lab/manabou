@@ -7,6 +7,9 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>まなぼう！ひらがな＆ABC</title>
+<meta name="author" content="Kimi to Lab (@kimi_to_lab)">
+<!-- まなぼう！ © 2026 Kimi to Lab (@kimi_to_lab)
+     ひらがなの書き順データ: KanjiVG (c) Ulrich Apel, CC BY-SA 3.0 https://kanjivg.tagaini.net -->
 <style>
 :root{
   --bg:#fff8ec;--ink:#3b2f2f;--kana:#ff7a8a;--kana2:#ffe1e5;--abc:#3d9bff;--abc2:#dcecff;
@@ -136,6 +139,8 @@ svg.ks{width:1em;height:1em;display:block;margin:auto;overflow:visible}
 
 .foot{margin-top:28px;background:#fff;border-radius:18px;padding:14px 18px;font-size:14px;line-height:1.7;color:#6b5d50}
 .foot b{color:var(--ink)}
+.credit{margin-top:14px;text-align:center;font-size:12px;line-height:1.8;color:#8a7b6c}
+.credit a{color:#6b5d50}
 .foot button{font-size:13px;background:#f3ece2;border-radius:999px;padding:6px 12px;margin-top:6px}
 </style>
 </head>
@@ -223,7 +228,7 @@ function render(html,back,cls=""){
 /* ========== ホーム ========== */
 function home(){
   const s=store.get();
-  render(`<div class="hero"><h1><span>ま</span><span>な</span><span>ぼ</span><span>う</span><span>！</span></h1><p>どっちを やる？</p></div>
+  render(`<div class="hero"><h1><span>ま</span><span>な</span><span>ぼ</span><span>う</span><span>！</span></h1><p>どれを やる？</p></div>
   <div class="big-cards">
     <button class="card kana fk" id="gk">あいう<small>ひらがな　⭐ ${s.kana}</small></button>
     <button class="card abc fa" id="ga">ABC<small style="font-family:var(--ui)">アルファベット　⭐ ${s.abc}</small></button>
@@ -231,8 +236,15 @@ function home(){
   </div>
   <div class="foot">
     <b>🔒 おうちの方へ</b><br>
-    このアプリはインターネットに一切つながりません（通信を禁止する設定を入れています）。名前などの入力もなく、シールの数だけがこの端末の中に保存されます。<br><span style="font-size:12px">ひらがなの書き順データ：KanjiVG（© Ulrich Apel, CC BY-SA 3.0）</span><br>
+    このアプリはインターネットに一切つながりません（通信を禁止する設定を入れています）。名前などの入力もなく、シールの数だけがこの端末の中に保存されます。<br>
     <button id="rs">シールを 0 にもどす</button>
+  </div>
+  <div class="credit">
+    <b>まなぼう！</b> © 2026 Kimi to Lab<br>
+    つくった人：<a href="https://www.threads.com/@kimi_to_lab" target="_blank" rel="noopener noreferrer">@kimi_to_lab（Threads）</a><br>
+    ひらがなの書き順データ：<a href="https://kanjivg.tagaini.net" target="_blank" rel="noopener noreferrer">KanjiVG</a>（© Ulrich Apel）<a href="https://creativecommons.org/licenses/by-sa/3.0/deed.ja" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a><br>
+    アルファベットの書き順データ・プログラム・デザイン：Kimi to Lab<br>
+    読み上げ・絵文字・効果音は、お使いの端末の機能を使っています。
   </div>`,null,"");
   $("#gk").onclick=kanaMenu; $("#ga").onclick=abcMenu; $("#gm").onclick=mathMenu;
   const rs=$("#rs");let armed=false;

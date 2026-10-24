@@ -8,5 +8,8 @@
 
 ブラウザで開くだけで使えます。
 
+## クレジット
+© 2026 Kimi to Lab（Threads: [@kimi_to_lab](https://www.threads.com/@kimi_to_lab)）
+
 ## ライセンス表記
 ひらがなの書き順データは [KanjiVG](https://kanjivg.tagaini.net)（© Ulrich Apel）を使用しています（CC BY-SA 3.0）。
