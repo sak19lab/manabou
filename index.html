@@ -81,7 +81,9 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 .jump button.on{background:var(--kana);color:#fff}
 .thead{text-align:center;font-size:24px;margin-bottom:6px}
 .thead .pic{font-size:40px;vertical-align:middle}
-.jump.sub button{background:#fff;border:2px solid #ffd59a}
+svg.ks{width:1em;height:1em;display:block;margin:auto;overflow:visible}
+.vw-c svg.ks{display:inline-block;vertical-align:middle}
+.jump.sub button{font-size:26px;background:#fff;border:2px solid #ffd59a}
 .jump button.cur{background:#ffc93c;border-color:#ffc93c}
 .jump.abcj button{width:40px;height:40px;font-size:20px}
 .trow{display:flex;align-items:center;justify-content:center;gap:14px}
@@ -248,11 +250,11 @@ function kanaMenu(){
   $("#m1").onclick=kanaChart; $("#m2").onclick=()=>rangePick(kanaQuiz); $("#m3").onclick=()=>kanaTrace(0,"free"); $("#m4").onclick=()=>kanaTrace(0,"order");
 }
 function kanaChart(){
-  let t="";LAYOUT.split("/").forEach(r=>[...r.padEnd(5,"_")].forEach(ch=>{t+=ch==="_"?`<div class="tile blank"></div>`:`<button class="tile fk" data-c="${ch}">${ch}</button>`}));
+  let t="";LAYOUT.split("/").forEach(r=>[...r.padEnd(5,"_")].forEach(ch=>{t+=ch==="_"?`<div class="tile blank"></div>`:`<button class="tile fk" data-c="${ch}">${kanaSVG(ch)}</button>`}));
   render(`${bar("ひらがな ひょう")}<div class="viewer" id="vw"><span class="vw-t">👆 もじを タッチしてね</span></div><div class="chart k5">${t}</div>`,kanaMenu,"k");
   $$(".tile[data-c]").forEach(b=>b.onclick=()=>{
     const k=KANA.find(x=>x.c===b.dataset.c);
-    $("#vw").innerHTML=`<span class="vw-c fk">${k.c}</span><span class="vw-e">${k.e}</span><span class="vw-t fk">${k.w}</span>`;
+    $("#vw").innerHTML=`<span class="vw-c fk">${kanaSVG(k.c)}</span><span class="vw-e">${k.e}</span><span class="vw-t fk">${k.w}</span>`;
     sayK(`${k.c}。${k.w}`);pop(b);
   });
 }
@@ -263,7 +265,7 @@ function rangePick(go){
 }
 function kanaQuiz(r){
   const pool=KANA.slice(...KRANGE[r]);const deck=shuffle(pool);
-  runQuiz({title:`きいて えらぼう（${r}）`,subj:"kana",back:kanaMenu,cls:"k",font:"fk",again:()=>kanaQuiz(r),
+  runQuiz({title:`きいて えらぼう（${r}）`,subj:"kana",back:kanaMenu,cls:"k",font:"fk",show:kanaSVG,again:()=>kanaQuiz(r),
     make:i=>{const a=deck[i%deck.length];
       return {prompt:`<div class="ear">👂</div><p class="hint">きこえた もじは どれかな？</p>`,
         speak:()=>sayK(a.c),answer:a.c,
@@ -342,7 +344,7 @@ function runQuiz(cfg){
     const dots=Array.from({length:N},(_,k)=>`<i class="${k<i?"d":k===i?"c":""}"></i>`).join("");
     render(`${bar(cfg.title)}<div class="dots">${dots}</div>
       <div class="prompt">${Q.prompt}<div class="pbtns"><button id="sp">🔊 もういちど</button>${Q.hint?`<button id="ht">💡 ヒント</button>`:""}</div><div class="hintbox" id="hb"></div></div>
-      <div class="choices c${Q.choices.length}">${Q.choices.map(c=>`<button class="choice ${cfg.font}" data-v="${c}">${c}</button>`).join("")}</div>`,cfg.back,cfg.cls);
+      <div class="choices c${Q.choices.length}">${Q.choices.map(c=>`<button class="choice ${cfg.font}" data-v="${c}">${cfg.show?cfg.show(c):c}</button>`).join("")}</div>`,cfg.back,cfg.cls);
     $("#sp").onclick=Q.speak;
     if(Q.hint)$("#ht").onclick=()=>{$("#hb").innerHTML=Q.hint};
     setTimeout(Q.speak,300);
@@ -364,9 +366,10 @@ function runQuiz(cfg){
 }
 
 /* ========== なぞって れんしゅう（じゆう） ========== */
+function kanaSVG(c){return `<svg class="ks" viewBox="0 0 109 109" role="img" aria-label="${c}"><g fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">${KSTROKE[c].map(d=>`<path d="${d}"/>`).join("")}</g></svg>`}
 function jumpHtml(cfg,idx,items){
   const fc=cfg.guide==="kana"?"fk":"fa";
-  const one=(k,cls)=>`<button class="${fc} ${cls}" data-j="${k}">${items[k].ch}</button>`;
+  const one=(k,cls)=>`<button class="${fc} ${cls}" data-j="${k}">${cfg.guide==="kana"?kanaSVG(items[k].ch):items[k].ch}</button>`;
   if(cfg.jump){
     let rs=0,re=items.length;
     const rows=cfg.jump.map(([c,n],k)=>{const nx=cfg.jump[k+1]?cfg.jump[k+1][1]:items.length,on=idx>=n&&idx<nx;if(on){rs=n;re=nx}return `<button class="${fc} ${on?"on":""}" data-j="${n}">${c}</button>`}).join("");
@@ -407,10 +410,14 @@ function traceFree(cfg){
       if(k===1)g.setLineDash([W*.02,W*.015]);else g.setLineDash([]);g.beginPath();g.moveTo(W*.04,ly);g.lineTo(W*.96,ly);g.stroke()});
     g.setLineDash([]);
   }
-  g.textAlign="center";g.textBaseline="alphabetic";g.fillStyle="#dedede";g.fillText(it.ch,x,y);
+  // ひらがなは 教科書と同じ「はなれた かたち」の書き順データで描く（フォントだと き・さ が つながるため）
+  const KS=isK&&it.strokes?it.strokes.map(d=>new Path2D(d)):null,ksc=W/109,KW=9;
+  const glyph=(c,col,extra)=>{if(KS){c.save();c.scale(ksc,ksc);c.lineCap=c.lineJoin="round";c.strokeStyle=col;c.lineWidth=KW+extra/ksc;KS.forEach(p=>c.stroke(p));c.restore()}
+    else{c.font=font;c.textAlign="center";c.textBaseline="alphabetic";c.fillStyle=col;c.fillText(it.ch,x,y);if(extra){c.strokeStyle=col;c.lineWidth=extra;c.lineJoin="round";c.strokeText(it.ch,x,y)}}};
+  glyph(g,"#dedede",0);
 
   // 判定用（どれだけなぞれたか）
-  const mkMask=extra=>{const c=document.createElement("canvas");c.width=c.height=W;const m=c.getContext("2d");m.font=font;m.textAlign="center";m.textBaseline="alphabetic";m.fillStyle="#000";m.fillText(it.ch,x,y);if(extra){m.strokeStyle="#000";m.lineWidth=extra;m.lineJoin="round";m.strokeText(it.ch,x,y)}return m.getImageData(0,0,W,W).data};
+  const mkMask=extra=>{const c=document.createElement("canvas");c.width=c.height=W;const m=c.getContext("2d");glyph(m,"#000",extra);return m.getImageData(0,0,W,W).data};
   const maskL=mkMask(0),maskT=mkMask(penW*2.2);
 
   const d=cd.getContext("2d");d.lineCap=d.lineJoin="round";d.lineWidth=penW;d.strokeStyle=cfg.color;d.fillStyle=cfg.color;
